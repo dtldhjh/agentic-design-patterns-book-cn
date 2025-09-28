@@ -1,0 +1,111 @@
+'''
+Description: 
+version: 
+Author: hjh
+Date: 2025-09-27 16:20:04
+LastEditors: hjh
+LastEditTime: 2025-09-27 19:54:47
+'''
+import os
+import logging
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
+from dotenv import load_dotenv,find_dotenv 
+load_dotenv(find_dotenv())
+
+# Configure logging to output to both console and file
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("reflection_langchain.log"),  # 输出到文件
+        logging.StreamHandler()  # 输出到控制台
+    ]
+)
+
+os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_PROJECT"] = "parallel_agent_demo"
+
+# Check if the API key is set
+if not os.getenv("OPENAI_API_KEY"):
+   raise ValueError("OPENAI_API_KEY not found in .env file. Please add it.")
+# Initialize the Chat LLM. We use gpt-4o for better reasoning.
+# A lower temperature is used for more deterministic outputs.
+llm = ChatOpenAI(model = "Qwen/Qwen3-Next-80B-A3B-Instruct",
+                    api_key=os.getenv("MODELSCOPE_ACCESS_TOKEN"), # 请设置相应的API密钥环境变量
+                    base_url=os.getenv("MODELSCOPE_BASE_URL"),                  
+                    temperature=0.1)
+def run_reflection_loop():
+   """
+   Demonstrates a multi-step AI reflection loop to progressively improve a Python function.
+   """
+   logging.info("Starting reflection loop...")
+   # --- The Core Task ---
+   task_prompt = """
+   Your task is to create a Python function named `calculate_factorial`.
+   This function should do the following:
+   1.  Accept a single integer `n` as input.
+   2.  Calculate its factorial (n!).
+   3.  Include a clear docstring explaining what the function does.
+   4.  Handle edge cases: The factorial of 0 is 1.
+   5.  Handle invalid input: Raise a ValueError if the input is a negative number.
+   """
+   # --- The Reflection Loop ---
+   max_iterations = 3
+   current_code = ""
+   # We will build a conversation history to provide context in each step.
+   message_history = [HumanMessage(content=task_prompt)]
+   for i in range(max_iterations):
+       logging.info("\n" + "="*25 + f" REFLECTION LOOP: ITERATION {i + 1} " + "="*25)
+       # --- 1. GENERATE / REFINE STAGE ---
+       # In the first iteration, it generates. In subsequent iterations, it refines.
+       if i == 0:
+           logging.info("\n>>> STAGE 1: GENERATING initial code...")
+           # The first message is just the task prompt.
+           response = llm.invoke(message_history)
+           current_code = response.content
+       else:
+           logging.info("\n>>> STAGE 1: REFINING code based on previous critique...")
+           # The message history now contains the task, 
+           # the last code, and the last critique.
+           # We instruct the model to apply the critiques.
+           message_history.append(HumanMessage(content="Please refine the code using the critiques provided."))
+           response = llm.invoke(message_history)
+           current_code = response.content
+       logging.info("\n--- Generated Code (v" + str(i + 1) + ") ---\n" + current_code)
+       message_history.append(response) # Add the generated code to history
+       # --- 2. REFLECT STAGE ---
+       logging.info("\n>>> STAGE 2: REFLECTING on the generated code...")
+       # Create a specific prompt for the reflector agent.
+       # This asks the model to act as a senior code reviewer.
+       reflector_prompt = [
+           SystemMessage(content="""
+               You are a senior software engineer and an expert 
+               in Python.
+               Your role is to perform a meticulous code review.
+               Critically evaluate the provided Python code based 
+               on the original task requirements.
+               Look for bugs, style issues, missing edge cases, 
+               and areas for improvement.
+               If the code is perfect and meets all requirements,
+               respond with the single phrase 'CODE_IS_PERFECT'.
+               Otherwise, provide a bulleted list of your critiques.
+           """),
+           HumanMessage(content=f"Original Task:\n{task_prompt}\n\nCode to Review:\n{current_code}")
+       ]
+       critique_response = llm.invoke(reflector_prompt)
+       critique = critique_response.content
+       # --- 3. STOPPING CONDITION ---
+       if "CODE_IS_PERFECT" in critique:
+           logging.info("\n--- Critique ---\nNo further critiques found. The code is satisfactory.")
+           break
+       logging.info("\n--- Critique ---\n" + critique)
+       # Add the critique to the history for the next refinement loop.
+       message_history.append(HumanMessage(content=f"Critique of the previous code:\n{critique}"))
+   logging.info("\n" + "="*30 + " FINAL RESULT " + "="*30)
+   logging.info("\nFinal refined code after the reflection process:\n")
+   logging.info(current_code)
+if __name__ == "__main__":
+   run_reflection_loop()

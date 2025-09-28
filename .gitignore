@@ -1,0 +1,55 @@
+# 忽略所有 .log 结尾的文件
+*.log
+
+# 忽略 OS 生成的文件
+.DS_Store
+Thumbs.db
+
+# 忽略所有 .swp 结尾的 Vim 交换文件
+*.swp
+
+# 忽略 node_modules 目录，适用于 Node.js 项目
+/node_modules
+
+# 忽略 Python 的编译和依赖文件
+*__pycache__*
+*.pyc
+*.pyo
+*.pyd
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+
+# 忽略 Java 编译后的 class 文件
+*.class
+
+# 忽略 Maven 和 Gradle 构建目录
+/target/
+/build/
+
+# 忽略 IDE 配置文件
+/.idea
+/.vscode
+/eclipse-workspace
+
+# 忽略环境配置文件
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 忽略打包或者压缩的文件
+*.zip
+*.tar.gz
+*.rar
+
+# 忽略系统密码和证书文件
+id_rsa
+id_dsa
+*.pem
+
+# 可能需要添加其他特定于项目的忽略规则
+/data
+*test*
+.venv
