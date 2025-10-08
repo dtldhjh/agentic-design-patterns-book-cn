@@ -4,7 +4,7 @@ version:
 Author: hjh
 Date: 2025-09-28 22:05:37
 LastEditors: hjh
-LastEditTime: 2025-09-28 22:08:36
+LastEditTime: 2025-10-05 17:10:19
 '''
 import os
 import logging
@@ -13,6 +13,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from dotenv import load_dotenv,find_dotenv 
 
 # Configure logging
 logging.basicConfig(
@@ -75,5 +76,5 @@ def main():
         logging.error(f"\nAn unexpected error occurred: {e}")
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(find_dotenv())
     main()

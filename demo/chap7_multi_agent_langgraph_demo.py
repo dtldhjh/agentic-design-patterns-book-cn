@@ -4,12 +4,12 @@ version:
 Author: hjh
 Date: 2025-09-28 22:05:37
 LastEditors: hjh
-LastEditTime: 2025-09-28 22:08:36
+LastEditTime: 2025-10-05 17:12:10
 '''
 import os
 import logging
 from typing import Annotated, Literal
-from dotenv import load_dotenv
+from dotenv import load_dotenv,find_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -126,5 +126,5 @@ def main():
         logging.error(f"\nAn unexpected error occurred: {e}")
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(find_dotenv())
     main()

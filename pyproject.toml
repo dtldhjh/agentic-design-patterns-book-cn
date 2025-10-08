@@ -8,6 +8,7 @@ dependencies = [
     "crewai>=0.95.0",
     "google-adk>=1.15.0",
     "langchain>=0.3.27",
+    "langchain-community>=0.3.30",
     "langchain-openai>=0.3.33",
     "langgraph>=0.6.7",
     "litellm>=1.77.4",
